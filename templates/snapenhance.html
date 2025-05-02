@@ -1503,8 +1503,66 @@
             border-bottom-style: solid;
         }
 
+        /* Documentation popup styling */
+        .documentation-section {
+            margin-bottom: var(--space-xl);
+            position: relative;
+        }
 
+        .documentation-section h2 {
+            font-size: var(--font-lg);
+            font-weight: 500;
+            color: var(--primary);
+            margin-bottom: var(--space-sm);
+            padding-bottom: var(--space-xs);
+            border-bottom: 1px solid var(--border);
+        }
 
+        .documentation-section h3 {
+            font-size: var(--font-md);
+            font-weight: 500;
+            color: var(--text-primary);
+            margin-top: var(--space-md);
+            margin-bottom: var(--space-xs);
+        }
+
+        .documentation-section p {
+            margin-bottom: var(--space-sm);
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        .documentation-list {
+            list-style-type: disc;
+            padding-left: var(--space-lg);
+            margin: var(--space-sm) 0;
+            color: var(--text-secondary);
+            position: relative;
+            line-height: 1.6;
+        }
+
+        .documentation-list li::marker {
+            color: var(--primary);
+            opacity: 0.7;
+        }
+
+        .documentation-list li {
+            margin-bottom: var(--space-xs);
+        }
+
+        .documentation-list li strong {
+            color: var(--primary);
+            font-weight: 500;
+        }
+
+        .documentation-divider {
+            height: 1px;
+            background: linear-gradient(to right,
+                rgba(255, 200, 210, 0.3),
+                rgba(230, 240, 255, 0.3),
+                rgba(220, 255, 240, 0.3));
+            margin: var(--space-lg) 0;
+        }
 
 
         footer {
@@ -2976,10 +3034,25 @@
             </div>
 
             <div class="blog-cards">
-                <!-- Blog Card 1 - Quick Mode Feature (newest) -->
-                <a href="https://snapenhance.vercel.app/blog/quick-mode-feature" class="blog-card">
+                <!-- Blog Card 1 - New Feedback Form (newest) -->
+                <a href="https://snapenhance.vercel.app/feedback" class="blog-card">
                     <div class="blog-card-image theme-bg-1">
                         <div class="new-badge">New</div>
+                    </div>
+                    <div class="blog-card-content">
+                        <div class="blog-card-tag">Announcement</div>
+                        <h3 class="blog-card-title">New Feedback Form for SnapEnhance AI Platform!</h3>
+                        <p class="blog-card-excerpt">We've launched a dedicated feedback form for the SnapEnhance AI platform. Share your thoughts, report issues, or suggest new features to help us improve.</p>
+                        <div class="blog-card-meta">
+                            <span class="blog-card-date">May 3, 2025</span>
+                            <span class="blog-card-read-time">3 min read</span>
+                        </div>
+                    </div>
+                </a>
+
+                <!-- Blog Card 2 - Quick Mode Feature -->
+                <a href="https://snapenhance.vercel.app/blog/quick-mode-feature" class="blog-card">
+                    <div class="blog-card-image theme-bg-2">
                     </div>
                     <div class="blog-card-content">
                         <div class="blog-card-tag">Feature</div>
@@ -2992,9 +3065,9 @@
                     </div>
                 </a>
 
-                <!-- Blog Card 2 - Voice Interface Philosophy -->
+                <!-- Blog Card 3 - Voice Interface Philosophy -->
                 <a href="https://snapenhance.vercel.app/blog/voice-interface-philosophy" class="blog-card">
-                    <div class="blog-card-image theme-bg-2">
+                    <div class="blog-card-image theme-bg-3">
                     </div>
                     <div class="blog-card-content">
                         <div class="blog-card-tag">Philosophy</div>
@@ -3007,9 +3080,9 @@
                     </div>
                 </a>
 
-                <!-- Blog Card 3 - Version Numbering -->
+                <!-- Blog Card 4 - Version Numbering -->
                 <a href="https://snapenhance.vercel.app/blog/version-numbering" class="blog-card">
-                    <div class="blog-card-image theme-bg-3">
+                    <div class="blog-card-image theme-bg-4">
                     </div>
                     <div class="blog-card-content">
                         <div class="blog-card-tag">Development</div>
@@ -3022,9 +3095,9 @@
                     </div>
                 </a>
 
-                <!-- Blog Card 4 - SnapEnhance AI Platform -->
+                <!-- Blog Card 5 - SnapEnhance AI Platform -->
                 <a href="https://snapenhance.vercel.app/blog/snapenhance-ai-platform" class="blog-card">
-                    <div class="blog-card-image theme-bg-4">
+                    <div class="blog-card-image theme-bg-5">
                     </div>
                     <div class="blog-card-content">
                         <div class="blog-card-tag">Platform</div>
@@ -3037,9 +3110,9 @@
                     </div>
                 </a>
 
-                <!-- Blog Card 5 - Prompt Engineering Guide -->
+                <!-- Blog Card 6 - Prompt Engineering Guide -->
                 <a href="https://snapenhance.vercel.app/blog/prompt-engineering-guide" class="blog-card">
-                    <div class="blog-card-image theme-bg-5">
+                    <div class="blog-card-image theme-bg-6">
                     </div>
                     <div class="blog-card-content">
                         <div class="blog-card-tag">Guide</div>
@@ -3052,9 +3125,9 @@
                     </div>
                 </a>
 
-                <!-- Blog Card 6 - Product Roadmap -->
+                <!-- Blog Card 7 - Product Roadmap -->
                 <a href="https://snapenhance.vercel.app/blog/product-roadmap" class="blog-card">
-                    <div class="blog-card-image theme-bg-6">
+                    <div class="blog-card-image theme-bg-7">
                     </div>
                     <div class="blog-card-content">
                         <div class="blog-card-tag">Roadmap</div>
@@ -3067,9 +3140,9 @@
                     </div>
                 </a>
 
-                <!-- Blog Card 7 - AI Ethics -->
+                <!-- Blog Card 8 - AI Ethics -->
                 <a href="https://snapenhance.vercel.app/blog/ai-ethics" class="blog-card">
-                    <div class="blog-card-image theme-bg-7">
+                    <div class="blog-card-image theme-bg-8">
                     </div>
                     <div class="blog-card-content">
                         <div class="blog-card-tag">Ethics</div>
@@ -3081,24 +3154,6 @@
                         </div>
                     </div>
                 </a>
-
-                <!-- Blog Card 8 - Office Productivity -->
-                <a href="https://snapenhance.vercel.app/blog/office-productivity" class="blog-card">
-                    <div class="blog-card-image theme-bg-8">
-                    </div>
-                    <div class="blog-card-content">
-                        <div class="blog-card-tag">Productivity</div>
-                        <h3 class="blog-card-title">Transforming Office Productivity with SnapEnhance</h3>
-                        <p class="blog-card-excerpt">Discover how SnapEnhance can streamline visual communication in your office environment, from documentation to presentations and team collaboration.</p>
-                        <div class="blog-card-meta">
-                            <span class="blog-card-date">April 30, 2025</span>
-                            <span class="blog-card-read-time">5 min read</span>
-                        </div>
-                    </div>
-                </a>
-
-
-
             </div>
         </div>
 
@@ -3337,7 +3392,7 @@ TOGETHER_API_KEY=your_together_api_key_here</code></pre>
 
             <div class="footer-section">
                 <span class="footer-heading">Resources</span>
-                <a href="https://snapenhance.vercel.app/docs">Documentation</a>
+                <a href="#" id="documentation-link">Documentation</a>
                 <a href="https://snapenhance.vercel.app/blog">Blog</a>
                 <a href="#" id="philosophy-link">Philosophy</a>
             </div>
@@ -3446,6 +3501,79 @@ TOGETHER_API_KEY=your_together_api_key_here</code></pre>
         </div>
     </div>
 
+    <!-- Documentation Backdrop and Popup -->
+    <div class="popup-backdrop" id="documentation-backdrop"></div>
+    <div class="popup-container" id="documentation-popup">
+        <div class="popup-header">
+            <span>Documentation</span>
+            <button class="close-btn" id="documentation-popup-close">×</button>
+        </div>
+        <div class="popup-content">
+            <div class="documentation-section">
+                <h2>Getting Started</h2>
+                <p>SnapEnhance AI is a powerful assistant that leverages state-of-the-art language models to provide helpful, accurate responses to your questions.</p>
+
+                <h3>Basic Usage</h3>
+                <ul class="documentation-list">
+                    <li><strong>Ask a question:</strong> Type your question in the input field and press Enter or click Send</li>
+                    <li><strong>Switch models:</strong> Use the model tabs at the top to switch between Llama 3.3 70B and DeepSeek R1</li>
+                    <li><strong>Adjust temperature:</strong> Click the temperature icon in the footer to control response creativity</li>
+                    <li><strong>Use Quick Mode:</strong> Toggle Quick Mode for faster, more concise responses</li>
+                </ul>
+            </div>
+
+            <div class="documentation-divider"></div>
+
+            <div class="documentation-section">
+                <h2>Special Features</h2>
+
+                <h3>Function Calling</h3>
+                <p>SnapEnhance can perform special functions to provide real-time information:</p>
+                <ul class="documentation-list">
+                    <li><strong>Weather:</strong> Ask "What's the weather in [location]?"</li>
+                    <li><strong>Time:</strong> Ask "What time is it in [location]?"</li>
+                    <li><strong>Wikipedia:</strong> Ask "Search Wikipedia for [topic]"</li>
+                    <li><strong>Product Search:</strong> Ask "Find products like [item]"</li>
+                </ul>
+
+                <h3>Voice Interface</h3>
+                <p>Use the microphone button to activate voice input:</p>
+                <ul class="documentation-list">
+                    <li>Click the microphone icon to start voice recognition</li>
+                    <li>Speak clearly into your microphone</li>
+                    <li>Review the transcription and click Submit</li>
+                </ul>
+            </div>
+
+            <div class="documentation-divider"></div>
+
+            <div class="documentation-section">
+                <h2>Tips & Tricks</h2>
+                <ul class="documentation-list">
+                    <li><strong>Be specific:</strong> The more specific your question, the better the response</li>
+                    <li><strong>Use DeepSeek R1:</strong> For mathematical or technical questions</li>
+                    <li><strong>Use Llama 3.3:</strong> For creative writing, explanations, or function calling</li>
+                    <li><strong>Adjust temperature:</strong> Lower for factual responses, higher for creative ones</li>
+                    <li><strong>Multi-turn conversations:</strong> Reference previous messages for context</li>
+                </ul>
+            </div>
+
+            <div class="documentation-divider"></div>
+
+            <div class="documentation-section">
+                <h2>Technical Details</h2>
+                <p>SnapEnhance AI is built with:</p>
+                <ul class="documentation-list">
+                    <li><strong>Backend:</strong> Flask server with Together AI API integration</li>
+                    <li><strong>Frontend:</strong> Vanilla HTML, CSS, and JavaScript (no frameworks)</li>
+                    <li><strong>Models:</strong> Llama 3.3 70B Instruct and DeepSeek R1 Distill Llama 70B</li>
+                    <li><strong>APIs:</strong> OpenWeatherMap, TimeZoneDB, OpenCage Geocoding, and Wikipedia</li>
+                </ul>
+                <p>For more technical details, click the "View Implementation Details" button at the bottom of the page.</p>
+            </div>
+        </div>
+    </div>
+
     <!-- Changelog Backdrop and Popup -->
     <div class="popup-backdrop" id="changelog-backdrop"></div>
     <div class="popup-container" id="changelog-popup">
@@ -3455,7 +3583,7 @@ TOGETHER_API_KEY=your_together_api_key_here</code></pre>
         </div>
         <div class="popup-content">
             <div class="changelog-entry">
-                <div class="changelog-version">v1.4.0 - May 1, 2025</div>
+                <div class="changelog-version">v1.4.0 - May 3, 2025</div>
                 <ul class="changelog-list">
                     <li><strong>Added:</strong> New "Quick Mode" toggle for ultra-fast responses</li>
                     <li><strong>Added:</strong> Visual indicator for Quick Mode with subtle animation</li>
@@ -4434,6 +4562,25 @@ TOGETHER_API_KEY=your_together_api_key_here</code></pre>
             philosophyLink.addEventListener('click', function(e) {
                 e.preventDefault();
                 showPopup(philosophyPopup, philosophyBackdrop);
+            });
+
+            // Toggle documentation popup
+            const documentationLink = document.getElementById('documentation-link');
+            const documentationPopup = document.getElementById('documentation-popup');
+            const documentationBackdrop = document.getElementById('documentation-backdrop');
+            const documentationPopupClose = document.getElementById('documentation-popup-close');
+
+            documentationLink.addEventListener('click', function(e) {
+                e.preventDefault();
+                showPopup(documentationPopup, documentationBackdrop);
+            });
+
+            documentationPopupClose.addEventListener('click', function() {
+                hidePopup(documentationPopup, documentationBackdrop);
+            });
+
+            documentationBackdrop.addEventListener('click', function() {
+                hidePopup(documentationPopup, documentationBackdrop);
             });
 
             // Cookbook toggle functionality
