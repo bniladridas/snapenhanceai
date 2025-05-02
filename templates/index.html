@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SnapEnhance AI</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo-container">
+                <h1 class="logo">SnapEnhance</h1>
+                <span class="tagline">AI Assistant</span>
+            </div>
+        </header>
+
+        <main>
+            <div class="model-selector">
+                <label for="model-select">Select Model:</label>
+                <select id="model-select">
+                    {% for model_id, model_name in models.items() %}
+                    <option value="{{ model_id }}">{{ model_name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="chat-container">
+                <div id="chat-messages" class="chat-messages">
+                    <div class="message system">
+                        <div class="message-content">
+                            <p>Welcome to SnapEnhance AI Assistant. How can I help you today?</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="input-container">
+                    <textarea id="user-input" placeholder="Type your message here..."></textarea>
+                    <button id="send-button">Send</button>
+                </div>
+            </div>
+        </main>
+
+        <footer>
+            <p>&copy; 2024 SnapEnhance. Powered by Together AI.</p>
+        </footer>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const chatMessages = document.getElementById('chat-messages');
+            const userInput = document.getElementById('user-input');
+            const sendButton = document.getElementById('send-button');
+            const modelSelect = document.getElementById('model-select');
+
+            function addMessage(content, isUser = false, isHtml = false) {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `message ${isUser ? 'user' : 'assistant'}`;
+
+                const messageContent = document.createElement('div');
+                messageContent.className = 'message-content';
+
+                // If content is HTML (from markdown conversion), use innerHTML
+                // Otherwise use textContent for safety
+                if (isHtml) {
+                    messageContent.innerHTML = content;
+                } else {
+                    const paragraph = document.createElement('p');
+                    paragraph.textContent = content;
+                    messageContent.appendChild(paragraph);
+                }
+
+                messageDiv.appendChild(messageContent);
+                chatMessages.appendChild(messageDiv);
+
+                // Scroll to bottom
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+
+            function sendMessage() {
+                const message = userInput.value.trim();
+                if (!message) return;
+
+                // Add user message to chat
+                addMessage(message, true);
+
+                // Clear input
+                userInput.value = '';
+
+                // Add loading indicator
+                const loadingDiv = document.createElement('div');
+                loadingDiv.className = 'message assistant loading';
+                loadingDiv.innerHTML = '<div class="message-content"><div class="loading-dots"><span></span><span></span><span></span></div></div>';
+                chatMessages.appendChild(loadingDiv);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+
+                // Send to API
+                fetch('/generate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        prompt: message,
+                        model: modelSelect.value
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    // Remove loading indicator
+                    chatMessages.removeChild(loadingDiv);
+
+                    if (data.error) {
+                        addMessage(`Error: ${data.error}`);
+                    } else if (data.choices && data.choices.length > 0) {
+                        // The content is HTML formatted by the server using Markdown
+                        addMessage(data.choices[0].message.content, false, true);
+                    } else {
+                        addMessage(data.response || 'Received an unexpected response from the API.');
+                    }
+                })
+                .catch(error => {
+                    // Remove loading indicator
+                    chatMessages.removeChild(loadingDiv);
+                    addMessage(`Error: ${error.message}`);
+                });
+            }
+
+            // Event listeners
+            sendButton.addEventListener('click', sendMessage);
+
+            userInput.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    sendMessage();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
