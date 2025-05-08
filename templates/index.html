@@ -3,7 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="author" content="SnapEnhance Team">
     <title>SnapEnhance AI</title>
+
+    <!-- Open Graph Meta Tags -->
+    <meta property="og:title" content="SnapEnhance AI" />
+    <meta property="og:description" content="Intuitive AI Assistant with Llama 3.3 70B and DeepSeek R1 models" />
+    <meta property="og:image" content="{{ url_for('static', filename='images/snapenhance-og-minimal.png', _external=True) }}" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:url" content="{{ request.url }}" />
+    <meta property="og:type" content="website" />
+    <meta property="og:author" content="SnapEnhance Team" />
+
+    <!-- Twitter Card Meta Tags -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="SnapEnhance AI" />
+    <meta name="twitter:description" content="Intuitive AI Assistant with Llama 3.3 70B and DeepSeek R1 models" />
+    <meta name="twitter:image" content="{{ url_for('static', filename='images/snapenhance-og-minimal.png', _external=True) }}" />
+
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

@@ -3,7 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="author" content="SnapEnhance Team">
     <title>SnapEnhance AI</title>
+
+    <!-- Open Graph Meta Tags -->
+    <meta property="og:title" content="SnapEnhance AI" />
+    <meta property="og:description" content="Intuitive AI Assistant with Llama 3.3 70B and DeepSeek R1 models" />
+    <meta property="og:image" content="{{ url_for('static', filename='images/snapenhance-og-minimal.png', _external=True) }}" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:url" content="{{ request.url }}" />
+    <meta property="og:type" content="website" />
+    <meta property="og:author" content="SnapEnhance Team" />
+
+    <!-- Twitter Card Meta Tags -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="SnapEnhance AI" />
+    <meta name="twitter:description" content="Intuitive AI Assistant with Llama 3.3 70B and DeepSeek R1 models" />
+    <meta name="twitter:image" content="{{ url_for('static', filename='images/snapenhance-og-minimal.png', _external=True) }}" />
+
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTAiIGhlaWdodD0iNTAiIHZpZXdCb3g9IjAgMCAzMiAzMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHJ4PSI4IiBmaWxsPSJyZ2JhKDI1NSwgMjU1LCAyNTUsIDAuOSkiLz48cmVjdCB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHJ4PSI4IiBzdHJva2U9InJnYmEoMjQwLCAyNDAsIDI0MCwgMC41KSIgc3Ryb2tlLXdpZHRoPSIxIi8+PGcgZmlsbD0iIzIxMjUyOSIgc3R5bGU9ImZvbnQtZmFtaWx5OiAnT3V0Zml0Jywgc3lzdGVtLXVpLCBzYW5zLXNlcmlmOyBmb250LXdlaWdodDogNTAwOyI+PHRleHQgeD0iOCIgeT0iMjIiIGZvbnQtc2l6ZT0iMTgiPlM8L3RleHQ+PHRleHQgeD0iMTciIHk9IjIyIiBmb250LXNpemU9IjE4Ij5FPC90ZXh0PjwvZz48cmVjdCB4PSI4IiB5PSIyNCIgd2lkdGg9IjE2IiBoZWlnaHQ9IjIiIHJ4PSIxIiBmaWxsPSIjRTlFQ0VGIi8+PC9zdmc+">
     <link rel="shortcut icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTAiIGhlaWdodD0iNTAiIHZpZXdCb3g9IjAgMCAzMiAzMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHJ4PSI4IiBmaWxsPSJyZ2JhKDI1NSwgMjU1LCAyNTUsIDAuOSkiLz48cmVjdCB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHJ4PSI4IiBzdHJva2U9InJnYmEoMjQwLCAyNDAsIDI0MCwgMC41KSIgc3Ryb2tlLXdpZHRoPSIxIi8+PGcgZmlsbD0iIzIxMjUyOSIgc3R5bGU9ImZvbnQtZmFtaWx5OiAnT3V0Zml0Jywgc3lzdGVtLXVpLCBzYW5zLXNlcmlmOyBmb250LXdlaWdodDogNTAwOyI+PHRleHQgeD0iOCIgeT0iMjIiIGZvbnQtc2l6ZT0iMTgiPlM8L3RleHQ+PHRleHQgeD0iMTciIHk9IjIyIiBmb250LXNpemU9IjE4Ij5FPC90ZXh0PjwvZz48cmVjdCB4PSI4IiB5PSIyNCIgd2lkdGg9IjE2IiBoZWlnaHQ9IjIiIHJ4PSIxIiBmaWxsPSIjRTlFQ0VGIi8+PC9zdmc+">
     <link rel="apple-touch-icon" href="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTgwIiBoZWlnaHQ9IjE4MCIgdmlld0JveD0iMCAwIDMyIDMyIiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxyZWN0IHdpZHRoPSIzMiIgaGVpZ2h0PSIzMiIgcng9IjgiIGZpbGw9IiM2MzY2ZjEiLz48ZyBmaWxsPSIjZmZmZmZmIiBzdHlsZT0iZm9udC1mYW1pbHk6ICdPdXRmaXQnLCBzeXN0ZW0tdWksIHNhbnMtc2VyaWY7IGZvbnQtd2VpZ2h0OiA1MDA7Ij48dGV4dCB4PSI4IiB5PSIyMiIgZm9udC1zaXplPSIxOCI+UzwvdGV4dD48dGV4dCB4PSIxNyIgeT0iMjIiIGZvbnQtc2l6ZT0iMTgiPkU8L3RleHQ+PC9nPjxyZWN0IHg9IjgiIHk9IjI0IiB3aWR0aD0iMTYiIGhlaWdodD0iMiIgcng9IjEiIGZpbGw9IiNmZmZmZmYiLz48L3N2Zz4=">
@@ -956,6 +974,7 @@
             flex: 1;
             display: -webkit-box;
             -webkit-line-clamp: 3;
+            line-clamp: 3;
             -webkit-box-orient: vertical;
             overflow: hidden;
             text-overflow: ellipsis;
