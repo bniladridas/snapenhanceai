@@ -39,8 +39,10 @@ Talisman(app, content_security_policy=csp, force_https=False)  # Set force_https
 
 # Get API key from environment variable
 API_KEY = os.environ.get('TOGETHER_API_KEY')
-if not API_KEY:
-    raise ValueError("TOGETHER_API_KEY environment variable is not set")
+# Check if we're in demo mode
+DEMO_MODE = os.environ.get('DEMO_MODE', 'False').lower() in ('true', '1', 'yes')
+if not API_KEY and not DEMO_MODE:
+    raise ValueError("TOGETHER_API_KEY environment variable is not set. Set DEMO_MODE=True to run without an API key.")
 
 # Define valid models with their specific settings
 # Together API constraint: (prompt/input tokens + max_tokens) <= 8193
@@ -66,26 +68,8 @@ VALID_MODELS = {
 
 # Define available functions for function calling
 AVAILABLE_FUNCTIONS = {
-    "get_weather": {
-        "description": "Get the current weather in a given location",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "location": {
-                    "type": "string",
-                    "description": "The city and state, e.g. San Francisco, CA"
-                },
-                "unit": {
-                    "type": "string",
-                    "enum": ["celsius", "fahrenheit"],
-                    "description": "The unit of temperature to use. Infer this from the user's location."
-                }
-            },
-            "required": ["location"]
-        }
-    },
     "get_real_weather": {
-        "description": "Get real-time weather data for a location using OpenWeatherMap API",
+        "description": "Get real-time weather data for a location using OpenWeatherMap API with current conditions, temperature, humidity, wind, and more",
         "parameters": {
             "type": "object",
             "properties": {
@@ -102,8 +86,8 @@ AVAILABLE_FUNCTIONS = {
             "required": ["location"]
         }
     },
-    "get_current_time": {
-        "description": "Get the current time in a specific timezone or location",
+    "get_real_time": {
+        "description": "Get accurate real-time data for a location using TimeZoneDB API with precise timezone information",
         "parameters": {
             "type": "object",
             "properties": {
@@ -120,8 +104,26 @@ AVAILABLE_FUNCTIONS = {
             "required": ["location"]
         }
     },
-    "get_real_time": {
-        "description": "Get accurate current time for a location using TimeZoneDB API",
+    "get_weather": {
+        "description": "Get simulated weather data (only use if real-time data is unavailable)",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "location": {
+                    "type": "string",
+                    "description": "The city and state, e.g. San Francisco, CA"
+                },
+                "unit": {
+                    "type": "string",
+                    "enum": ["celsius", "fahrenheit"],
+                    "description": "The unit of temperature to use. Infer this from the user's location."
+                }
+            },
+            "required": ["location"]
+        }
+    },
+    "get_current_time": {
+        "description": "Get simulated time data (only use if real-time data is unavailable)",
         "parameters": {
             "type": "object",
             "properties": {
@@ -210,42 +212,89 @@ def execute_function(function_name, arguments):
     # Clean up function name - sometimes the model returns the description instead of the name
     function_name = function_name.lower()
 
+    # Check if this is a greeting or simple query that shouldn't use functions
+    greeting_terms = ["hi", "hello", "hey", "greetings", "good morning", "good afternoon",
+                     "good evening", "how are you", "what's up", "nice to meet you"]
+
+    # Get the query from arguments if it exists (for search functions)
+    query = ""
+    if "query" in arguments:
+        query = str(arguments.get("query", "")).lower()
+    elif "location" in arguments:
+        query = str(arguments.get("location", "")).lower()
+
+    # Check if the query is just a greeting
+    if any(term == query for term in greeting_terms):
+        logger.warning(f"Prevented function call for simple greeting: {query}")
+        return {
+            "error": "Function calls are not needed for simple greetings",
+            "message": "This is a simple greeting that doesn't require API data"
+        }
+
     # Map function descriptions to actual function names
+    # The first function in each list is the preferred implementation
     function_map = {
-        "get_weather": ["get_weather", "get the current weather"],
-        "get_real_weather": ["get_real_weather", "get real-time weather", "real weather"],
-        "get_current_time": ["get_current_time", "get the current time"],
-        "get_real_time": ["get_real_time", "get accurate current time", "accurate time"],
-        "search_products": ["search_products", "search for products"],
-        "search_wikipedia": ["search_wikipedia", "search wikipedia", "wikipedia"]
+        # Always prefer real-time weather data
+        "weather": {
+            "aliases": ["weather", "get weather", "current weather", "get the current weather", "get_weather", "get_real_weather", "real weather", "real-time weather"],
+            "function": "get_real_weather",
+            "fallback": "get_weather"
+        },
+        # Always prefer real-time time data
+        "time": {
+            "aliases": ["time", "current time", "get time", "get the current time", "get_current_time", "get_real_time", "accurate time", "real time"],
+            "function": "get_real_time",
+            "fallback": "get_current_time"
+        },
+        "products": {
+            "aliases": ["products", "search products", "search for products", "get products", "find products", "search_products"],
+            "function": "search_products",
+            "fallback": None
+        },
+        "wikipedia": {
+            "aliases": ["wikipedia search", "search wikipedia", "wiki search", "search wiki", "search_wikipedia", "lookup wikipedia", "find on wikipedia", "wikipedia article"],
+            "function": "search_wikipedia",
+            "fallback": None
+        }
     }
 
-    # Find the actual function name
-    actual_function = None
-    for func, aliases in function_map.items():
-        if any(alias.lower() in function_name for alias in aliases):
-            actual_function = func
+    # Find the matching function category
+    matched_category = None
+    matched_function = None
+
+    for category, config in function_map.items():
+        if any(alias in function_name for alias in config["aliases"]):
+            matched_category = category
+            matched_function = config["function"]
             break
 
-    print(f"Mapped function '{function_name}' to '{actual_function}'")
+    logger.info(f"Mapped function '{function_name}' to category '{matched_category}' with function '{matched_function}'")
 
-    # Execute the appropriate function
-    if actual_function == "get_weather":
-        return get_weather(arguments.get("location"), arguments.get("unit", "celsius"))
-    elif actual_function == "get_real_weather":
-        return get_real_weather(arguments.get("location"), arguments.get("unit", "celsius"))
-    elif actual_function == "get_current_time":
-        return get_current_time(arguments.get("location"), arguments.get("format", "24h"))
-    elif actual_function == "get_real_time":
-        return get_real_time(arguments.get("location"), arguments.get("format", "24h"))
-    elif actual_function == "search_products":
+    # Execute the appropriate function with real-time data priority
+    if matched_category == "weather":
+        # Always try real-time weather first
+        result = get_real_weather(arguments.get("location"), arguments.get("unit", "celsius"))
+        # Only fall back to simulated data if there was an API error and we have no API key
+        if "error" in result and "API key not provided" in result.get("error", ""):
+            logger.info("Falling back to simulated weather data due to missing API key")
+            return get_weather(arguments.get("location"), arguments.get("unit", "celsius"))
+        return result
+    elif matched_category == "time":
+        # Always try real-time time first
+        result = get_real_time(arguments.get("location"), arguments.get("format", "24h"))
+        # Only fall back if there was an API error and we have no API keys
+        if "error" in result or "note" in result and "API key not provided" in result.get("note", ""):
+            logger.info("Falling back to simulated time data due to missing API keys")
+            return get_current_time(arguments.get("location"), arguments.get("format", "24h"))
+        return result
+    elif matched_category == "products":
         return search_products(
             arguments.get("query"),
             arguments.get("category"),
             arguments.get("max_price"),
             arguments.get("sort_by", "popularity")
         )
-    elif actual_function == "search_wikipedia":
+    elif matched_category == "wikipedia":
         return search_wikipedia(
             arguments.get("query"),
             arguments.get("limit", 1)
@@ -618,44 +667,79 @@ def get_real_time(location, format="24h"):
         }
 
 def search_wikipedia(query, limit=1):
-    """Search Wikipedia for information on a topic"""
+    """Search Wikipedia for information on a topic using the live Wikipedia API"""
     try:
-        print(f"Searching Wikipedia for '{query}'")
-        # Make API request to Wikipedia
+        logger.info(f"Searching Wikipedia for '{query}'")
+        # Make API request to Wikipedia with expanded parameters for better results
         search_params = {
             "action": "query",
             "format": "json",
             "list": "search",
             "srsearch": query,
             "srlimit": min(limit, 5),  # Limit to 5 results max
-            "srprop": "snippet|titlesnippet|sectiontitle|categorysnippet|size|wordcount|timestamp|redirecttitle"
+            "srprop": "snippet|titlesnippet|sectiontitle|categorysnippet|size|wordcount|timestamp|redirecttitle",
+            "srinfo": "totalhits|suggestion|rewrittenquery",
+            "srqiprofile": "classic_noboostlinks",  # Better quality results
+            "srwhat": "text"  # Search in article text
         }
 
-        search_response = requests.get(
-            "https://en.wikipedia.org/w/api.php",
-            params=search_params,
-            timeout=5
-        )
+        # Add retry logic for Wikipedia API
+        max_retries = 3
+        retry_delay = 1  # seconds
 
+        for retry in range(max_retries):
+            try:
+                search_response = requests.get(
+                    "https://en.wikipedia.org/w/api.php",
+                    params=search_params,
+                    timeout=5
+                )
+
+                # Break if successful
+                if search_response.status_code == 200:
+                    break
+
+                # Wait before retrying
+                if retry < max_retries - 1:
+                    logger.warning(f"Wikipedia search retry {retry+1}/{max_retries} after error: {search_response.status_code}")
+                    time.sleep(retry_delay * (retry + 1))
+            except Exception as e:
+                logger.error(f"Wikipedia search request error (attempt {retry+1}/{max_retries}): {str(e)}")
+                if retry < max_retries - 1:
+                    time.sleep(retry_delay * (retry + 1))
+
+        # Check if all retries failed
         if search_response.status_code != 200:
-            print(f"Wikipedia search failed: {search_response.status_code}")
+            logger.error(f"Wikipedia search failed after {max_retries} attempts: {search_response.status_code}")
             return {
                 "error": f"Wikipedia search failed: {search_response.status_code}",
                 "query": query,
-                "data_source": "Wikipedia API"
+                "data_source": "Wikipedia API (real-time)",
+                "timestamp": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             }
 
         search_data = search_response.json()
         search_results = search_data.get("query", {}).get("search", [])
 
+        # Check for search suggestions if no results found
+        if not search_results and "searchinfo" in search_data.get("query", {}):
+            searchinfo = search_data["query"]["searchinfo"]
+            suggestion = searchinfo.get("suggestion", "")
+
+            if suggestion:
+                logger.info(f"No results for '{query}', but found suggestion: '{suggestion}'")
+                # Try the search again with the suggestion
+                return search_wikipedia(suggestion, limit)
+
         if not search_results:
-            print(f"No Wikipedia articles found for '{query}'")
+            logger.info(f"No Wikipedia articles found for '{query}'")
             return {
                 "query": query,
                 "results_count": 0,
                 "message": f"No Wikipedia articles found for '{query}'",
                 "results": [],
-                "data_source": "Wikipedia API"
+                "data_source": "Wikipedia API (real-time)",
+                "timestamp": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             }
 
         # For each search result, get the page content
@@ -663,46 +747,79 @@ def search_wikipedia(query, limit=1):
 
         for result in search_results:
             page_title = result["title"]
-            print(f"Getting content for Wikipedia article: {page_title}")
+            logger.info(f"Getting content for Wikipedia article: {page_title}")
 
-            # Get page content
+            # Get page content with expanded properties for more comprehensive data
             content_params = {
                 "action": "query",
                 "format": "json",
-                "prop": "extracts|info|pageimages|categories|coordinates|langlinks",
+                "prop": "extracts|info|pageimages|categories|coordinates|langlinks|description|pageviews|revisions",
                 "exintro": True,  # Only get the intro section
                 "explaintext": True,  # Get plain text
-                "inprop": "url|displaytitle",  # Get the URL and display title
+                "inprop": "url|displaytitle|watchers|visitingwatchers",  # Get the URL and display title
                 "pithumbsize": 500,  # Get a thumbnail image
                 "titles": page_title,
                 "redirects": 1,  # Follow redirects
                 "cllimit": 5,  # Limit to 5 categories
                 "lllimit": 5,  # Limit to 5 language links
-                "lllang": "fr|es|de|it|ja"  # Get links for these languages
+                "lllang": "fr|es|de|it|ja",  # Get links for these languages
+                "rvprop": "timestamp|user|comment",  # Get revision info
+                "rvlimit": 1,  # Only get the latest revision
+                "pvipdays": 7  # Get pageviews for the last 7 days
             }
 
-            content_response = requests.get(
-                "https://en.wikipedia.org/w/api.php",
-                params=content_params,
-                timeout=5
-            )
+            # Add retry logic for content retrieval
+            max_retries = 3
+            retry_delay = 1  # seconds
+            content_response = None
 
-            if content_response.status_code == 200:
-                content_data = content_response.json()
-                pages = content_data.get("query", {}).get("pages", {})
+            for retry in range(max_retries):
+                try:
+                    content_response = requests.get(
+                        "https://en.wikipedia.org/w/api.php",
+                        params=content_params,
+                        timeout=5
+                    )
 
-                # Get the first (and only) page
-                page_id = next(iter(pages))
-                page = pages[page_id]
+                    # Break if successful
+                    if content_response.status_code == 200:
+                        break
 
-                # Extract the content
-                extract = page.get("extract", "No content available")
-                url = page.get("fullurl", f"https://en.wikipedia.org/wiki/{page_title.replace(' ', '_')}")
+                    # Wait before retrying
+                    if retry < max_retries - 1:
+                        logger.warning(f"Wikipedia content retry {retry+1}/{max_retries} for '{page_title}' after error: {content_response.status_code}")
+                        time.sleep(retry_delay * (retry + 1))
+                except Exception as e:
+                    logger.error(f"Wikipedia content request error for '{page_title}' (attempt {retry+1}/{max_retries}): {str(e)}")
+                    if retry < max_retries - 1:
+                        time.sleep(retry_delay * (retry + 1))
 
-                # Get thumbnail image if available
-                thumbnail = None
-                if "thumbnail" in page.get("pageimage", {}):
-                    thumbnail = page["thumbnail"]["source"]
+            # Skip this result if all retries failed
+            if not content_response or content_response.status_code != 200:
+                logger.error(f"Failed to get content for '{page_title}' after {max_retries} attempts")
+                continue
+
+            content_data = content_response.json()
+            pages = content_data.get("query", {}).get("pages", {})
+
+            # Get the first (and only) page
+            page_id = next(iter(pages))
+            page = pages[page_id]
+
+            # Extract the content
+            extract = page.get("extract", "No content available")
+            url = page.get("fullurl", f"https://en.wikipedia.org/wiki/{page_title.replace(' ', '_')}")
+            description = page.get("description", "")
+
+            # Get last modified info
+            last_modified = None
+            if "revisions" in page and len(page["revisions"]) > 0:
+                last_modified = page["revisions"][0].get("timestamp", "")
+
+            # Get thumbnail image if available
+            thumbnail = None
+            if "thumbnail" in page:
+                thumbnail = page["thumbnail"]["source"]
 
                 # Get categories if available
                 categories = []
@@ -744,20 +861,24 @@ def search_wikipedia(query, limit=1):
                     "last_modified": result.get("timestamp", "")
                 })
 
+        # Return the results with enhanced real-time data indicators
         return {
             "query": query,
             "results_count": len(results),
             "results": results,
             "data_source": "Wikipedia API (real-time data)",
-            "timestamp": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            "timestamp": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "search_time": f"{datetime.datetime.now().strftime('%H:%M:%S')}",
+            "api_version": "live"
         }
     except Exception as e:
-        print(f"Error searching Wikipedia: {str(e)}")
+        logger.error(f"Error searching Wikipedia: {str(e)}", exc_info=True)
         return {
             "error": f"Error searching Wikipedia: {str(e)}",
             "query": query,
-            "data_source": "Wikipedia API",
-            "timestamp": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            "data_source": "Wikipedia API (real-time data)",
+            "timestamp": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "api_version": "live"
         }
 
 def search_products(query, category=None, max_price=None, sort_by="popularity"):
@@ -972,18 +1093,21 @@ Remember: The user values SPEED over comprehensiveness. Give them just the key d
             if not any(msg.get('role') == 'system' for msg in messages):
                 system_message = {
                     'role': 'system',
-                    'content': """You are a helpful AI assistant. For this weather-related query, you should:
+                    'content': """You are a helpful AI assistant. For this weather-related query, you MUST:
 
-1. Recognize that this is a weather query that requires real-time data
-2. Use the get_real_weather function to fetch current weather information
-3. Format your response with a clear structure:
-   - Start with a ## heading about the weather location
-   - Present the weather data in a visually appealing way
-   - Use emoji where appropriate (☀️, 🌧️, 🌤️, etc.)
-   - Include temperature, conditions, and other relevant details
-4. If the location is ambiguous or not specified, ask for clarification
+1. ALWAYS use the get_real_weather function to fetch current weather information
+2. NEVER use the get_weather function (which provides simulated data)
+3. NEVER make up or guess weather information - only use real-time API data
+4. Format your response in a simple, plain text format:
+   - No markdown headings (no ## or ###)
+   - No emoji
+   - No special formatting
+   - Just present the information in clear, concise sentences
+   - Include temperature, conditions, humidity, wind, and other details
+5. If the location is ambiguous or not specified, ask for clarification
+6. Briefly mention you're providing real-time data from OpenWeatherMap API
 
-Remember to use the function calling capability rather than making up weather information."""
+IMPORTANT: Real-time accuracy is the top priority. Always prioritize live data over cached information."""
                 }
                 messages.insert(0, system_message)
 
@@ -993,18 +1117,45 @@ Remember to use the function calling capability rather than making up weather in
             if not any(msg.get('role') == 'system' for msg in messages):
                 system_message = {
                     'role': 'system',
-                    'content': """You are a helpful AI assistant. For this time-related query, you should:
+                    'content': """You are a helpful AI assistant. For this time-related query, you MUST:
 
-1. Recognize that this is a time query that requires real-time data
-2. Use the get_real_time function to fetch current time information
-3. Format your response with a clear structure:
-   - Start with a ## heading about the time location
-   - Present the time data in a visually appealing way
-   - Use emoji where appropriate (🕒, 🌍, etc.)
-   - Include the date, time, and timezone information
-4. If the location is ambiguous or not specified, ask for clarification
+1. ALWAYS use the get_real_time function to fetch current time information
+2. NEVER use the get_current_time function (which provides simulated data)
+3. NEVER make up or guess time information - only use real-time API data
+4. Format your response in a simple, plain text format:
+   - No markdown headings (no ## or ###)
+   - No emoji
+   - No special formatting
+   - Just present the information in clear, concise sentences
+   - Include the time, date, timezone, and DST information
+5. If the location is ambiguous or not specified, ask for clarification
+6. Briefly mention you're providing real-time data from TimeZoneDB API
 
-Remember to use the function calling capability rather than making up time information."""
+IMPORTANT: Real-time accuracy is the top priority. Always prioritize live data over cached information."""
+                }
+                messages.insert(0, system_message)
+
+        # Case for Wikipedia search queries
+        elif any(term in prompt.lower() for term in ["wikipedia", "wiki", "article", "encyclopedia", "information about", "tell me about", "what is", "who is"]):
+            # Add a specific system message for Wikipedia queries
+            if not any(msg.get('role') == 'system' for msg in messages):
+                system_message = {
+                    'role': 'system',
+                    'content': """You are a helpful AI assistant. For this information query, you MUST:
+
+1. ALWAYS use the search_wikipedia function to fetch real-time information
+2. NEVER make up or guess information - only use real-time API data
+3. Format your response in a simple, plain text format:
+   - No markdown headings (no ## or ###)
+   - No emoji
+   - No special formatting
+   - Just present the information in clear, concise sentences
+   - Include relevant details from the Wikipedia article
+   - Cite Wikipedia as your source
+4. If the query is ambiguous or too broad, ask for clarification
+5. Briefly mention you're providing real-time data from Wikipedia API
+
+IMPORTANT: Real-time accuracy is the top priority. Always prioritize live data over cached information."""
                 }
                 messages.insert(0, system_message)
 
@@ -1026,6 +1177,24 @@ Remember to use the function calling capability rather than making up time infor
 4. If the search query is ambiguous or too broad, ask for clarification
 
 Remember to use the function calling capability rather than making up product information."""
+                }
+                messages.insert(0, system_message)
+
+        # Case for greetings and casual conversation
+        elif any(term in prompt.lower() for term in ["hi", "hello", "hey", "greetings", "good morning", "good afternoon", "good evening", "how are you", "what's up", "nice to meet you"]):
+            # Add a specific system message for greetings
+            if not any(msg.get('role') == 'system' for msg in messages):
+                system_message = {
+                    'role': 'system',
+                    'content': """You are a helpful AI assistant. This appears to be a greeting or casual conversation:
+
+1. Respond in a friendly, conversational manner
+2. DO NOT use any function calls for simple greetings
+3. Keep your response brief and welcoming
+4. You can ask how you can help the user today
+5. Format your response with a clear, friendly tone
+
+Remember: Simple greetings don't require API calls or function execution."""
                 }
                 messages.insert(0, system_message)
 
